@@ -1,23 +1,36 @@
+// simple-todos.js
+Tasks = new Mongo.Collection('tasks');
+
 if (Meteor.isClient) {
-  // counter starts at 0
-  Session.setDefault('counter', 0);
-
-  Template.hello.helpers({
-    counter: function () {
-      return Session.get('counter');
+  // This code only runs on the client
+  Template.body.helpers({
+    tasks: function () {
+      return Tasks.find({}, {sort: {createdAt: -1}});
     }
   });
 
-  Template.hello.events({
-    'click button': function () {
-      // increment the counter when button is clicked
-      Session.set('counter', Session.get('counter') + 1);
+  Template.body.events({
+    "submit .new-task": function (event) {
+      var text = event.target.text.value;
+
+      Tasks.insert({
+        text: text,
+        createdAt: new Date()
+      });
+
+      event.target.text.value = "";
+      // prevents default form submit
+      return false;
     }
   });
-}
-
-if (Meteor.isServer) {
-  Meteor.startup(function () {
-    // code to run on server at startup
-  });
+  Template.task.events({
+    "click .toggle-checked": function() {
+      console.log(this)
+      Tasks.update(this._id, {$set: {checked: ! this.checked}});
+    },
+    "click .delete": function() {
+      console.log(this);
+      Tasks.remove(this._id);
+    }
+  })
 }
